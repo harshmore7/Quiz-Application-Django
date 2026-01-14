@@ -1,0 +1,29 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Django specific
+db.sqlite3
+db.sqlite3-journal
+media/
+staticfiles/
+
+# Environments (Virtual Envs)
+.env
+.venv
+env/
+venv/
+ENV/
+
+# OS specific
+.DS_Store
+Thumbs.db
+
+# IDE specific (VS Code)
+.vscode/
+
+# Project specific migrations
+# Note: Usually, you SHOULD commit migrations. 
+# Only uncomment if you want to ignore them (not recommended for teams).
+# examapp/migrations/00*.py
