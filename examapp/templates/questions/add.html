@@ -1,0 +1,19 @@
+<form method="post">
+{% csrf_token %}
+
+<input name="qno" placeholder="Question No"><br>
+<input name="question_text" placeholder="Question"><br>
+
+<select name="subject">
+  {% for s in subjects %}
+  <option value="{{ s.id }}">{{ s.name }}</option>
+  {% endfor %}
+</select><br><br>
+
+{% for i in "0123" %}
+<input type="radio" name="correct" value="{{ forloop.counter0 }}">
+<input name="option"><br>
+{% endfor %}
+
+<button type="submit">Save</button>
+</form>

@@ -1,0 +1,31 @@
+<h2>Edit Question</h2>
+
+<form method="post">
+{% csrf_token %}
+
+<input name="qno" value="{{ question.qno }}" placeholder="Question No"><br><br>
+
+<input name="question_text"
+       value="{{ question.question_text }}"
+       placeholder="Question"><br><br>
+
+<select name="subject">
+  {% for s in subjects %}
+    <option value="{{ s.id }}"
+      {% if s == question.subject %}selected{% endif %}>
+      {{ s.name }}
+    </option>
+  {% endfor %}
+</select>
+
+<br><br>
+
+{% for option in question.options.all %}
+  <input type="radio" name="correct" value="{{ forloop.counter0 }}"
+    {% if option.is_correct %}checked{% endif %}>
+  <input name="option" value="{{ option.text }}"><br>
+{% endfor %}
+
+<br>
+<button type="submit">Update</button>
+</form>
