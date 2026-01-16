@@ -1,8 +1,39 @@
-<form method="post">
-  {% csrf_token %}
-  <input name="username" placeholder="Username"><br>
-  <input name="email" type="email" placeholder="Email"><br>
-  <input name="mobile" placeholder="Mobile"><br>
-  <input name="password" type="password" placeholder="Password"><br>
-  <button type="submit">Register</button>
-</form>
+{% extends 'base.html' %}
+{% block content %}
+
+<div class="row justify-content-center">
+  <div class="col-md-5">
+
+    <h3 class="mb-3">Student Registration</h3>
+
+    <form method="post">
+      {% csrf_token %}
+
+      <div class="mb-3">
+        <input class="form-control" name="username" placeholder="Username">
+      </div>
+
+      <div class="mb-3">
+        <input class="form-control" type="email" name="email" placeholder="Email">
+      </div>
+
+      <div class="mb-3">
+        <input class="form-control" name="mobile" placeholder="Mobile Number">
+      </div>
+
+      <div class="mb-3">
+        <input class="form-control" type="password" name="password" placeholder="Password">
+      </div>
+
+      <button class="btn btn-success w-100">Register</button>
+    </form>
+
+    <p class="mt-3 text-center">
+      Already registered?
+      <a href="{% url 'login' %}">Login</a>
+    </p>
+
+  </div>
+</div>
+
+{% endblock %}

@@ -1,0 +1,48 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<h3>Student Details</h3>
+
+<div class="card mb-4">
+  <div class="card-body">
+    <p><strong>Username:</strong> {{ student.user.username }}</p>
+    <p><strong>Email:</strong> {{ student.user.email }}</p>
+    <p><strong>Mobile:</strong> {{ student.mobile }}</p>
+  </div>
+</div>
+
+<h4>Test Results</h4>
+
+<table class="table table-bordered">
+  <thead class="table-secondary">
+    <tr>
+      <th>Subject</th>
+      <th>Marks</th>
+      <th>Total</th>
+      <th>Date</th>
+    </tr>
+  </thead>
+
+  <tbody>
+    {% for r in results %}
+      <tr>
+        <td>{{ r.subject.name }}</td>
+        <td>{{ r.marks }}</td>
+        <td>{{ r.total }}</td>
+        <td>{{ r.date|date:"d M Y, H:i" }}</td>
+      </tr>
+    {% empty %}
+      <tr>
+        <td colspan="4" class="text-center">
+          No test attempts
+        </td>
+      </tr>
+    {% endfor %}
+  </tbody>
+</table>
+
+<a href="{% url 'student_list' %}" class="btn btn-secondary">
+  Back to Students
+</a>
+
+{% endblock %}

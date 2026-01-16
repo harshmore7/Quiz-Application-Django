@@ -1,0 +1,38 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<h3 class="mb-3">My Test Results</h3>
+
+<table class="table table-bordered table-hover">
+  <thead class="table-dark">
+    <tr>
+      <th>Subject</th>
+      <th>Marks</th>
+      <th>Total</th>
+      <th>Date</th>
+    </tr>
+  </thead>
+
+  <tbody>
+    {% for r in results %}
+      <tr>
+        <td>{{ r.subject.name }}</td>
+        <td>{{ r.marks }}</td>
+        <td>{{ r.total }}</td>
+        <td>{{ r.date|date:"d M Y, H:i" }}</td>
+      </tr>
+    {% empty %}
+      <tr>
+        <td colspan="4" class="text-center">
+          No test attempts yet
+        </td>
+      </tr>
+    {% endfor %}
+  </tbody>
+</table>
+
+<a href="{% url 'start_test' %}" class="btn btn-primary">
+  Start New Test
+</a>
+
+{% endblock %}

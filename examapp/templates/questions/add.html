@@ -1,19 +1,41 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<h3>Add Question</h3>
+
 <form method="post">
 {% csrf_token %}
 
-<input name="qno" placeholder="Question No"><br>
-<input name="question_text" placeholder="Question"><br>
+<div class="mb-3">
+  <input class="form-control" name="qno" placeholder="Question Number">
+</div>
 
-<select name="subject">
-  {% for s in subjects %}
-  <option value="{{ s.id }}">{{ s.name }}</option>
-  {% endfor %}
-</select><br><br>
+<div class="mb-3">
+  <input class="form-control" name="question_text" placeholder="Question Text">
+</div>
+
+<div class="mb-3">
+  <select class="form-select" name="subject">
+    {% for s in subjects %}
+      <option value="{{ s.id }}">{{ s.name }}</option>
+    {% endfor %}
+  </select>
+</div>
+
+<label class="fw-bold">Options</label>
 
 {% for i in "0123" %}
-<input type="radio" name="correct" value="{{ forloop.counter0 }}">
-<input name="option"><br>
+  <div class="input-group mb-2">
+    <div class="input-group-text">
+      <input type="radio" name="correct" value="{{ forloop.counter0 }}">
+    </div>
+    <input class="form-control" name="option" placeholder="Option {{ forloop.counter }}">
+  </div>
 {% endfor %}
 
-<button type="submit">Save</button>
+<button class="btn btn-success">Save Question</button>
+<a href="{% url 'question_list' %}" class="btn btn-secondary">Cancel</a>
+
 </form>
+
+{% endblock %}

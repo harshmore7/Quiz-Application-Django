@@ -1,0 +1,43 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<h3>All Students</h3>
+
+<table class="table table-bordered table-hover">
+  <thead class="table-dark">
+    <tr>
+      <th>Username</th>
+      <th>Email</th>
+      <th>Mobile</th>
+      <th>Actions</th>
+    </tr>
+  </thead>
+
+  <tbody>
+    {% for s in students %}
+      <tr>
+        <td>{{ s.user.username }}</td>
+        <td>{{ s.user.email }}</td>
+        <td>{{ s.mobile }}</td>
+        <td>
+          <a class="btn btn-sm btn-info"
+             href="{% url 'student_detail' s.id %}">
+            View
+          </a>
+          <a class="btn btn-sm btn-danger"
+             href="{% url 'student_delete' s.id %}">
+            Delete
+          </a>
+        </td>
+      </tr>
+    {% empty %}
+      <tr>
+        <td colspan="4" class="text-center">
+          No students found
+        </td>
+      </tr>
+    {% endfor %}
+  </tbody>
+</table>
+
+{% endblock %}

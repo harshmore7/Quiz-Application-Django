@@ -2,16 +2,16 @@
 {% block content %}
 
 <div class="alert alert-danger">
-  <h5>Delete Question</h5>
+  <h5>Delete Student</h5>
   <p>
-    Are you sure you want to delete:
-    <strong>{{ question.question_text }}</strong>?
+    Are you sure you want to delete
+    <strong>{{ student.user.username }}</strong>?
   </p>
 
   <form method="post">
     {% csrf_token %}
     <button class="btn btn-danger">Yes, Delete</button>
-    <a href="{% url 'question_list' %}" class="btn btn-secondary">Cancel</a>
+    <a href="{% url 'student_list' %}" class="btn btn-secondary">Cancel</a>
   </form>
 </div>
 

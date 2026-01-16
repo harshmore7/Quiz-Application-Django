@@ -1,0 +1,32 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<div class="row justify-content-center">
+  <div class="col-md-6 text-center">
+
+    <h2 class="mb-3">Final Result</h2>
+
+    <div class="alert alert-success">
+      <h4>
+        Score: {{ score }} / {{ total }}
+      </h4>
+    </div>
+
+    <div class="d-grid gap-2">
+      <a href="{% url 'start_test' %}" class="btn btn-primary">
+        Take Another Test
+      </a>
+
+      <a href="{% url 'result_list' %}" class="btn btn-outline-secondary">
+        View All Results
+      </a>
+
+      <a href="{% url 'home' %}" class="btn btn-link">
+        Back to Home
+      </a>
+    </div>
+
+  </div>
+</div>
+
+{% endblock %}

@@ -57,4 +57,4 @@ class StudentAnswer(models.Model):
     selected_option = models.ForeignKey(Option, on_delete=models.CASCADE)
 
     def __str__(self):
-        return f"{self.student} - Q{self.question.id}. {self.question.text}"
+        return f"{self.student} - Q{self.question.id}. {self.question.question_text}"
