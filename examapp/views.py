@@ -63,8 +63,20 @@ def staff_required(view_func):
 @login_required
 @staff_required
 def question_list(request):
+    subject_filter = request.GET.get('subject')
+
     questions = Question.objects.all()
-    return render(request, 'questions/list.html', {'questions': questions})
+
+    if subject_filter:
+        questions = questions.filter(subject__name=subject_filter)
+
+    subjects = Subject.objects.all()
+
+    return render(request, 'questions/list.html', {
+        'questions': questions,
+        'subjects': subjects,
+        'selected_subject': subject_filter
+    })
 
 
 @login_required

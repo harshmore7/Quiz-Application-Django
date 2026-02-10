@@ -6,6 +6,32 @@
   <a class="btn btn-success" href="{% url 'add_question' %}">Add Question</a>
 </div>
 
+<form method="get" class="mb-3">
+  <div class="row g-2 align-items-center">
+    <div class="col-auto">
+      <label class="fw-bold">Filter by Subject:</label>
+    </div>
+
+    <div class="col-auto">
+      <select name="subject"
+              class="form-select"
+              onchange="this.form.submit()">
+        <option value="">All</option>
+
+        {% for subject in subjects %}
+          <option value="{{ subject.name }}"
+            {% if selected_subject == subject.name %}
+              selected
+            {% endif %}>
+            {{ subject.name }}
+          </option>
+        {% endfor %}
+      </select>
+    </div>
+  </div>
+</form>
+
+
 <table class="table table-bordered table-hover">
   <thead class="table-dark">
     <tr>

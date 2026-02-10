@@ -18,7 +18,9 @@
 
       <button class="btn btn-primary w-100">Login</button>
     </form>
-
+    <div class="text-center mt-3">
+      <a href="{% url 'register' %}">Don’t have an account? Register</a>
+    </div>
     {% if error %}
       <div class="alert alert-danger mt-2">{{ error }}</div>
     {% endif %}
