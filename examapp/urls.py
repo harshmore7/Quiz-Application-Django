@@ -27,4 +27,8 @@ urlpatterns = [
     # Profile management URLs
     path('profile/', views.profile_view, name='profile'),
     path('profile/edit/', views.profile_edit, name='profile_edit'),
+
+    # Password change URL
+    path('profile/password/', views.change_password, name='change_password'),
+
 ]

@@ -1,3 +1,5 @@
+from django.contrib.auth.forms import PasswordChangeForm
+from django.contrib.auth import update_session_auth_hash
 from django.shortcuts import render, redirect, get_object_or_404
 from django.http import HttpResponseForbidden
 from django.contrib.auth.models import User
@@ -302,4 +304,21 @@ def profile_edit(request):
 
     return render(request, 'profile/edit.html', {
         'student': student
+    })
+
+# Change password view
+@login_required
+def change_password(request):
+    if request.method == "POST":
+        form = PasswordChangeForm(request.user, request.POST)
+
+        if form.is_valid():
+            user = form.save()
+            update_session_auth_hash(request, user)  # VERY IMPORTANT
+            return redirect('profile')
+    else:
+        form = PasswordChangeForm(request.user)
+
+    return render(request, 'profile/change_password.html', {
+        'form': form
     })
