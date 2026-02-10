@@ -15,6 +15,10 @@ urlpatterns = [
     path('questions/edit/<int:pk>/', views.edit_question, name='edit_question'),
     path('questions/delete/<int:pk>/', views.delete_question, name='delete_question'),
     path('start-test/', views.start_test, name='start_test'),
+
+    path("start/<int:subject_id>/", views.start_subject_test, name="start_subject_test"),
+
+
     path('test/<int:subject_id>/<int:q_index>/', views.test_question, name='test_question'),
     path('end-test/<int:subject_id>/', views.end_test, name='end_test'),
     path('results/', views.result_list, name='result_list'),

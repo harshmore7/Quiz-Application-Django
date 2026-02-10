@@ -17,7 +17,7 @@
             <span class="badge bg-secondary">Attempted</span>
           </div>
         {% else %}
-          <a href="{% url 'test_question' s.id 0 %}"
+          <a href="{% url 'start_subject_test' s.id %}"
              class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
             {{ s.name }}
             <span class="badge bg-success">Start</span>

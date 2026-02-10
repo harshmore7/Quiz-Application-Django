@@ -1,6 +1,10 @@
 {% extends 'base.html' %}
 {% block content %}
 
+<div class="alert alert-warning text-center fw-bold">
+  Time Remaining: <span id="timer"></span>
+</div>
+
 <div class="card">
   <div class="card-body">
 
@@ -39,5 +43,58 @@
 
   </div>
 </div>
+
+<hr>
+
+<hr>
+<h6>Question Palette</h6>
+
+<div class="d-flex flex-wrap gap-2">
+  {% for q in questions %}
+    {% if forloop.counter0 == q_index %}
+      <!-- 🔵 Current -->
+      <a href="{% url 'test_question' subject_id forloop.counter0 %}"
+         class="btn btn-sm btn-primary">
+        {{ forloop.counter }}
+      </a>
+
+    {% elif q.id in answered_q_ids %}
+      <!-- 🟢 Answered -->
+      <a href="{% url 'test_question' subject_id forloop.counter0 %}"
+         class="btn btn-sm btn-success">
+        {{ forloop.counter }}
+      </a>
+
+    {% else %}
+      <!-- ⚪ Not Answered -->
+      <a href="{% url 'test_question' subject_id forloop.counter0 %}"
+         class="btn btn-sm btn-outline-secondary">
+        {{ forloop.counter }}
+      </a>
+    {% endif %}
+  {% endfor %}
+</div>
+
+
+<script>
+let remaining = {{ remaining_seconds }};
+
+function tick() {
+  if (remaining <= 0) {
+    window.location.href = "{% url 'end_test' subject_id %}";
+    return;
+  }
+
+  let m = Math.floor(remaining / 60);
+  let s = remaining % 60;
+  document.getElementById("timer").innerText =
+    m + ":" + (s < 10 ? "0" : "") + s;
+
+  remaining--;
+}
+
+tick();
+setInterval(tick, 1000);
+</script>
 
 {% endblock %}
