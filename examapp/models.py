@@ -6,7 +6,7 @@ class Subject(models.Model):
     name = models.CharField(max_length=100, unique=True)
 
     def __str__(self):
-        return self.name;
+        return self.name
 
 
 class Question(models.Model):
@@ -54,7 +54,16 @@ class Result(models.Model):
 class StudentAnswer(models.Model):
     student = models.ForeignKey(Student, on_delete=models.CASCADE)
     question = models.ForeignKey(Question, on_delete=models.CASCADE)
-    selected_option = models.ForeignKey(Option, on_delete=models.CASCADE)
+
+    # BUG 1 FIX: was non-nullable (on_delete=CASCADE) — crashed when trying to
+    # track unanswered questions, and contradicted the isnull filter in views.py.
+    # Now nullable so unanswered questions can be stored without an option.
+    selected_option = models.ForeignKey(
+        Option,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True
+    )
 
     def __str__(self):
         return f"{self.student} - Q{self.question.id}. {self.question.question_text}"

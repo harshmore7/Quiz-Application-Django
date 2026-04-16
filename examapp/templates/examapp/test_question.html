@@ -1,0 +1,143 @@
+{% extends "examapp/base.html" %}
+{% block content %}
+
+<div class="container mt-4">
+
+  <!-- 🔥 Top Bar -->
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h5 class="fw-bold mb-0">
+      Question {{ q_index|add:1 }} / {{ total }}
+    </h5>
+
+    <div class="badge bg-warning text-dark fs-6 px-3 py-2">
+      ⏱ <span id="timer"></span>
+    </div>
+  </div>
+
+  <!-- 🔥 Progress Bar -->
+  <div class="progress mb-4" style="height: 8px;">
+    <div class="progress-bar"
+         role="progressbar"
+         style="width: {{ q_index|add:1|floatformat:0 }}0%;">
+    </div>
+  </div>
+
+  <!-- 🔥 Question Card -->
+  <div class="card shadow-sm border-0 mb-4">
+    <div class="card-body">
+
+      <p class="fw-bold fs-5">{{ question.question_text }}</p>
+
+      <form method="post">
+        {% csrf_token %}
+
+        {% for opt in question.options.all %}
+          <label class="w-100 mb-2">
+            <div class="card p-2 option-card">
+              <input type="radio"
+                     name="option"
+                     value="{{ opt.id }}"
+                     class="form-check-input me-2"
+                     {% if selected_answer and selected_answer.selected_option.id == opt.id %}
+                        checked
+                     {% endif %}>
+              {{ opt.text }}
+            </div>
+          </label>
+        {% endfor %}
+
+        <!-- 🔥 Navigation Buttons -->
+        <div class="d-flex justify-content-between mt-4">
+
+          <div>
+            {% if q_index > 0 %}
+              <button class="btn btn-outline-secondary" name="prev">
+                ⬅ Previous
+              </button>
+            {% endif %}
+          </div>
+
+          <div>
+            {% if q_index < total|add:-1 %}
+              <button class="btn btn-primary" name="next">
+                Next ➡
+              </button>
+            {% else %}
+              <button class="btn btn-success" name="finish">
+                Finish Test
+              </button>
+            {% endif %}
+          </div>
+
+        </div>
+
+      </form>
+
+    </div>
+  </div>
+
+  <!-- 🔥 Question Palette -->
+  <div class="card shadow-sm border-0 p-3">
+    <h6 class="mb-3">Question Palette</h6>
+
+    <div class="d-flex flex-wrap gap-2">
+      {% for q in questions %}
+        {% if forloop.counter0 == q_index %}
+          <a href="{% url 'test_question' subject_id forloop.counter0 %}"
+             class="btn btn-sm btn-primary">
+            {{ forloop.counter }}
+          </a>
+
+        {% elif q.id in answered_q_ids %}
+          <a href="{% url 'test_question' subject_id forloop.counter0 %}"
+             class="btn btn-sm btn-success">
+            {{ forloop.counter }}
+          </a>
+
+        {% else %}
+          <a href="{% url 'test_question' subject_id forloop.counter0 %}"
+             class="btn btn-sm btn-outline-secondary">
+            {{ forloop.counter }}
+          </a>
+        {% endif %}
+      {% endfor %}
+    </div>
+  </div>
+
+</div>
+
+<!-- 🔥 Timer Script -->
+<script>
+let remaining = {{ remaining_seconds }};
+
+function tick() {
+  if (remaining <= 0) {
+    window.location.href = "{% url 'end_test' subject_id %}";
+    return;
+  }
+
+  let m = Math.floor(remaining / 60);
+  let s = remaining % 60;
+
+  document.getElementById("timer").innerText =
+    m + ":" + (s < 10 ? "0" : "") + s;
+
+  remaining--;
+}
+
+tick();
+setInterval(tick, 1000);
+</script>
+
+<!-- 🔥 Extra Styling -->
+<style>
+.option-card {
+  cursor: pointer;
+  transition: 0.2s;
+}
+.option-card:hover {
+  background-color: #f8f9fa;
+}
+</style>
+
+{% endblock %}

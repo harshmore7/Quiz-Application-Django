@@ -5,14 +5,20 @@ from django.http import HttpResponseForbidden
 from django.contrib.auth.models import User
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
-from . models import Result, Student, Question, Subject, Option, StudentAnswer
-from datetime import timedelta
+from django.contrib.auth.views import redirect_to_login
+from .models import Result, Student, Question, Subject, Option, StudentAnswer
+from datetime import timedelta, datetime
 from django.utils import timezone
-from datetime import datetime
+from django.utils.timezone import make_aware
 
-# Create your views here.
+
+# ------------------------
+# BASIC VIEWS
+# ------------------------
+
 def home(request):
-    return render(request, 'home.html')
+    return render(request, 'examapp/home.html')
+
 
 def register_student(request):
     if request.method == 'POST':
@@ -21,53 +27,73 @@ def register_student(request):
         password = request.POST['password']
         mobile = request.POST['mobile']
 
-        user = User.objects.create_user(
-            username = username,
-            email = email,
-            password = password
-        )
+        if User.objects.filter(username=username).exists():
+            return render(request, 'examapp/register.html', {
+                'error': 'Username already taken.'
+            })
 
-        Student.objects.create(
-            user = user,
-            mobile = mobile
-        )
+        try:
+            user = User.objects.create_user(
+                username=username,
+                email=email,
+                password=password
+            )
+            Student.objects.create(user=user, mobile=mobile)
+            return redirect('login')
+        except Exception:
+            return render(request, 'examapp/register.html', {
+                'error': 'Registration failed.'
+            })
 
-        return redirect('login')
-    return render(request, 'register.html')
+    return render(request, 'examapp/register.html')
+
 
 def login_student(request):
     if request.method == 'POST':
-        username = request.POST['username']
-        password = request.POST['password']
-
-        user = authenticate(request, username=username, password=password)
+        user = authenticate(
+            request,
+            username=request.POST['username'],
+            password=request.POST['password']
+        )
 
         if user:
             login(request, user)
             return redirect('home')
         else:
-            return render(request, 'login.html', {'error': 'Invalid credentials'})
-    return render(request, 'login.html')
+            return render(request, 'examapp/login.html', {
+                'error': 'Invalid credentials'
+            })
+
+    return render(request, 'examapp/login.html')
+
 
 def logout_student(request):
     logout(request)
     return redirect('login')
 
-# decorator to check staff status
+
+# ------------------------
+# STAFF CHECK
+# ------------------------
+
 def staff_required(view_func):
     def wrapper(request, *args, **kwargs):
+        if not request.user.is_authenticated:
+            return redirect_to_login(request.get_full_path())
         if not request.user.is_staff:
-            return HttpResponseForbidden("You are not allowed to access this page.")
+            return HttpResponseForbidden("Not allowed")
         return view_func(request, *args, **kwargs)
     return wrapper
 
 
-# Logic for question listing, adding, editing, deleting
+# ------------------------
+# QUESTION MANAGEMENT
+# ------------------------
+
 @login_required
 @staff_required
 def question_list(request):
     subject_filter = request.GET.get('subject')
-
     questions = Question.objects.all()
 
     if subject_filter:
@@ -75,7 +101,7 @@ def question_list(request):
 
     subjects = Subject.objects.all()
 
-    return render(request, 'questions/list.html', {
+    return render(request, 'examapp/questions/list.html', {
         'questions': questions,
         'subjects': subjects,
         'selected_subject': subject_filter
@@ -88,29 +114,25 @@ def add_question(request):
     subjects = Subject.objects.all()
 
     if request.method == "POST":
-        qno = request.POST['qno']
-        question_text = request.POST['question_text']
-        subject_id = request.POST['subject']
-
         question = Question.objects.create(
-            qno=qno,
-            question_text=question_text,
-            subject_id=subject_id
+            qno=request.POST['qno'],
+            question_text=request.POST['question_text'],
+            subject_id=request.POST['subject']
         )
 
         options = request.POST.getlist('option')
         correct = request.POST.get('correct')
 
-        for index, text in enumerate(options):
+        for i, text in enumerate(options):
             Option.objects.create(
                 question=question,
                 text=text,
-                is_correct=(str(index) == correct)
+                is_correct=(str(i) == correct)
             )
 
         return redirect('question_list')
 
-    return render(request, 'questions/add.html', {'subjects': subjects})
+    return render(request, 'examapp/questions/add.html', {'subjects': subjects})
 
 
 @login_required
@@ -120,80 +142,80 @@ def edit_question(request, pk):
     subjects = Subject.objects.all()
 
     if request.method == "POST":
-        # update question fields
         question.qno = request.POST['qno']
         question.question_text = request.POST['question_text']
         question.subject_id = request.POST['subject']
         question.save()
 
-        # remove old options
         question.options.all().delete()
 
-        # add updated options
         options = request.POST.getlist('option')
         correct = request.POST.get('correct')
 
-        for index, text in enumerate(options):
-            if text.strip():  # avoid empty options
+        for i, text in enumerate(options):
+            if text.strip():
                 Option.objects.create(
                     question=question,
                     text=text,
-                    is_correct=(str(index) == correct)
+                    is_correct=(str(i) == correct)
                 )
 
         return redirect('question_list')
 
-    return render(request, 'questions/edit.html', {
+    return render(request, 'examapp/questions/edit.html', {
         'question': question,
         'subjects': subjects
     })
 
 
-
 @login_required
 @staff_required
 def delete_question(request, pk):
-    question = Question.objects.get(pk=pk)
+    question = get_object_or_404(Question, pk=pk)
 
     if request.method == "POST":
         question.delete()
         return redirect('question_list')
 
-    return render(request, 'questions/delete.html', {'question': question})
+    return render(request, 'examapp/questions/delete.html', {
+        'question': question
+    })
+
+
+# ------------------------
+# TEST FLOW
+# ------------------------
 
 @login_required
 def start_test(request):
-    # ❌ admins should not start tests
     if request.user.is_superuser:
-        return render(request, "message.html", {
+        return render(request, "examapp/message.html", {
             "message": "Only students can start tests."
         })
 
-    student = request.user.student
-
-    # show subject list
-    if request.method == "GET":
-        subjects = Subject.objects.all()
-        attempted_subjects = Result.objects.filter(
-            student=student
-        ).values_list("subject_id", flat=True)
-
-        return render(request, "start_test.html", {
-            "subjects": subjects,
-            "attempted_subjects": attempted_subjects
+    try:
+        student = request.user.student
+    except:
+        return render(request, "examapp/message.html", {
+            "message": "Student profile not found."
         })
-    
+
+    subjects = Subject.objects.all()
+
+    attempted_subjects = Result.objects.filter(
+        student=student
+    ).values_list("subject_id", flat=True)
+
+    return render(request, "examapp/start_test.html", {
+        "subjects": subjects,
+        "attempted_subjects": attempted_subjects
+    })
+
+
 @login_required
 def start_subject_test(request, subject_id):
-    if request.user.is_superuser:
-        return render(request, "message.html", {
-            "message": "Only students can start tests."
-        })
-
-    # clear old test data
     request.session.pop("answers", None)
 
-    # ⏱️ set test time (10 minutes)
     start_time = timezone.now()
     end_time = start_time + timedelta(minutes=10)
 
@@ -203,18 +225,23 @@ def start_subject_test(request, subject_id):
     return redirect("test_question", subject_id=subject_id, q_index=0)
 
 
-
-
 @login_required
 def test_question(request, subject_id, q_index):
     student = request.user.student
     subject = Subject.objects.get(id=subject_id)
     questions = list(Question.objects.filter(subject=subject))
+
+    if q_index >= len(questions):
+        return redirect("end_test", subject_id)
+
     question = questions[q_index]
 
-    # ⏱ timer (keep as-is)
     end_time = datetime.fromisoformat(request.session["test_end_time"])
+    if end_time.tzinfo is None:
+        end_time = make_aware(end_time)
+
     remaining_seconds = int((end_time - timezone.now()).total_seconds())
+
     if remaining_seconds <= 0:
         return redirect("end_test", subject_id)
 
@@ -228,38 +255,29 @@ def test_question(request, subject_id, q_index):
                 defaults={"selected_option_id": selected_option_id}
             )
 
-        # ⬅️ PREVIOUS
         if "prev" in request.POST and q_index > 0:
             return redirect("test_question", subject_id, q_index - 1)
 
-        # ➡️ NEXT
-        if "next" in request.POST and q_index < len(questions) - 1:
+        if "next" in request.POST:
             return redirect("test_question", subject_id, q_index + 1)
 
-        # ✅ FINISH
         if "finish" in request.POST:
             return redirect("end_test", subject_id)
 
-    # 🔍 Get answered question IDs for this student & subject
-    answered_q_ids = set(
-        StudentAnswer.objects.filter(
-            student=student,
-            question__subject=subject,
-            selected_option__isnull=False   # ⭐ THIS IS THE FIX
-        ).values_list("question_id", flat=True)
-    )
+    selected_answer = StudentAnswer.objects.filter(
+        student=student,
+        question=question
+    ).first()
 
-
-    return render(request, "test_question.html", {
+    return render(request, "examapp/test_question.html", {
         "question": question,
         "q_index": q_index,
         "total": len(questions),
         "remaining_seconds": remaining_seconds,
         "subject_id": subject.id,
         "questions": questions,
-        "answered_q_ids": answered_q_ids, 
+        "selected_answer": selected_answer,
     })
-
 
 
 @login_required
@@ -271,77 +289,43 @@ def end_test(request, subject_id):
     for q in questions:
         try:
             answer = StudentAnswer.objects.get(student=student, question=q)
-            if answer.selected_option.is_correct:
+            if answer.selected_option and answer.selected_option.is_correct:
                 score += 1
         except StudentAnswer.DoesNotExist:
             pass
 
-    Result.objects.create(
+    Result.objects.get_or_create(
         student=student,
         subject_id=subject_id,
-        marks=score,
-        total=questions.count()
+        defaults={'marks': score, 'total': questions.count()}
     )
 
-    return render(request, 'result.html', {
+    return render(request, 'examapp/result.html', {
         'score': score,
         'total': questions.count()
     })
 
-
-    
 
 @login_required
 def result_list(request):
     student = request.user.student
     results = Result.objects.filter(student=student).order_by('-date')
 
-    return render(request, 'results.html', {
+    return render(request, 'examapp/results.html', {
         'results': results
     })
 
 
-# Staff views for student management
-@login_required
-@staff_required
-def student_list(request):
-    students = Student.objects.select_related('user')
-    return render(request, 'students/list.html', {
-        'students': students
-    })
-
-@login_required
-@staff_required
-def student_detail(request, pk):
-    student = get_object_or_404(Student, pk=pk)
-    results = Result.objects.filter(student=student)
-
-    return render(request, 'students/detail.html', {
-        'student': student,
-        'results': results
-    })
-
-@login_required
-@staff_required
-def student_delete(request, pk):
-    student = get_object_or_404(Student, pk=pk)
-
-    if request.method == "POST":
-        student.user.delete()  # deletes user + student (cascade)
-        return redirect('student_list')
-
-    return render(request, 'students/delete.html', {
-        'student': student
-    })
-
-# Profile management views 
+# ------------------------
+# PROFILE
+# ------------------------
 
 @login_required
 def profile_view(request):
-    student = request.user.student
-    return render(request, 'profile/view.html', {
-        'student': student
+    return render(request, 'examapp/profile/view.html', {
+        'student': request.user.student
     })
+
 
 @login_required
 def profile_edit(request):
@@ -358,23 +342,59 @@ def profile_edit(request):
 
         return redirect('profile')
 
-    return render(request, 'profile/edit.html', {
+    return render(request, 'examapp/profile/edit.html', {
         'student': student
     })
 
-# Change password view
+
 @login_required
 def change_password(request):
-    if request.method == "POST":
-        form = PasswordChangeForm(request.user, request.POST)
+    form = PasswordChangeForm(request.user, request.POST or None)
 
-        if form.is_valid():
-            user = form.save()
-            update_session_auth_hash(request, user)  # VERY IMPORTANT
-            return redirect('profile')
-    else:
-        form = PasswordChangeForm(request.user)
+    if request.method == "POST" and form.is_valid():
+        user = form.save()
+        update_session_auth_hash(request, user)
+        return redirect('profile')
 
-    return render(request, 'profile/change_password.html', {
+    return render(request, 'examapp/profile/change_password.html', {
         'form': form
+    })
+
+
+# ------------------------
+# STUDENT MANAGEMENT (STAFF)
+# ------------------------
+
+@login_required
+@staff_required
+def student_list(request):
+    students = Student.objects.select_related('user')
+    return render(request, 'examapp/students/list.html', {
+        'students': students
+    })
+
+
+@login_required
+@staff_required
+def student_detail(request, pk):
+    student = get_object_or_404(Student, pk=pk)
+    results = Result.objects.filter(student=student)
+
+    return render(request, 'examapp/students/detail.html', {
+        'student': student,
+        'results': results
+    })
+
+
+@login_required
+@staff_required
+def student_delete(request, pk):
+    student = get_object_or_404(Student, pk=pk)
+
+    if request.method == "POST":
+        student.user.delete()
+        return redirect('student_list')
+
+    return render(request, 'examapp/students/delete.html', {
+        'student': student
     })
